@@ -71,7 +71,7 @@ CREATE TABLE `k_job_record` (
   `start_time` datetime DEFAULT NULL COMMENT '启动时间',
   `stop_time` datetime DEFAULT NULL COMMENT '停止时间',
   `record_status` int(11) DEFAULT NULL COMMENT '任务执行结果（1：成功；2：失败）',
-  `log_file_path` varchar(100) DEFAULT NULL COMMENT '作业日志记录文件保存位置',
+  `log_file_path` varchar(300) DEFAULT NULL COMMENT '作业日志记录文件保存位置',
   `add_user` int(11) DEFAULT NULL COMMENT '添加人',
   PRIMARY KEY (`record_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=390 DEFAULT CHARSET=utf8;
