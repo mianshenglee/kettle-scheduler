@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zhaxd.core.model.*;
 import org.apache.commons.lang.StringUtils;
 import org.beetl.sql.core.DSTransactionManager;
 import org.beetl.sql.core.db.KeyHolder;
@@ -21,14 +22,12 @@ import com.zhaxd.core.mapper.KQuartzDao;
 import com.zhaxd.core.mapper.KRepositoryDao;
 import com.zhaxd.core.mapper.KTransDao;
 import com.zhaxd.core.mapper.KTransMonitorDao;
-import com.zhaxd.core.model.KQuartz;
-import com.zhaxd.core.model.KRepository;
-import com.zhaxd.core.model.KTrans;
-import com.zhaxd.core.model.KTransMonitor;
 import com.zhaxd.web.quartz.QuartzManager;
 import com.zhaxd.web.quartz.TransQuartz;
 import com.zhaxd.web.quartz.model.DBConnectionModel;
 import com.zhaxd.web.utils.CommonUtils;
+
+import javax.annotation.PostConstruct;
 
 @Service
 public class TransService {
@@ -397,7 +396,7 @@ public class TransService {
             templateOne.setMonitorStatus(1);
             StringBuilder runStatusBuilder = new StringBuilder();
             runStatusBuilder.append(templateOne.getRunStatus())
-                    .append(",").append(new Date().getTime()).append(Constant.RUNSTATUS_SEPARATE);
+                    .append(",").append(System.currentTimeMillis()).append(Constant.RUNSTATUS_SEPARATE);
             templateOne.setRunStatus(runStatusBuilder.toString());
             templateOne.setNextExecuteTime(nextExecuteTime);
             kTransMonitorDao.updateTemplateById(templateOne);
@@ -408,7 +407,7 @@ public class TransService {
             kTransMonitor.setMonitorSuccess(0);
             kTransMonitor.setMonitorFail(0);
             StringBuilder runStatusBuilder = new StringBuilder();
-            runStatusBuilder.append(new Date().getTime()).append(Constant.RUNSTATUS_SEPARATE);
+            runStatusBuilder.append(System.currentTimeMillis()).append(Constant.RUNSTATUS_SEPARATE);
             kTransMonitor.setRunStatus(runStatusBuilder.toString());
             kTransMonitor.setMonitorStatus(1);
             kTransMonitor.setNextExecuteTime(nextExecuteTime);
@@ -431,7 +430,7 @@ public class TransService {
         templateOne.setMonitorStatus(2);
         StringBuilder runStatusBuilder = new StringBuilder();
         runStatusBuilder.append(templateOne.getRunStatus())
-                .append(new Date().getTime());
+                .append(System.currentTimeMillis());
         templateOne.setRunStatus(runStatusBuilder.toString());
         kTransMonitorDao.updateTemplateById(templateOne);
     }
@@ -506,5 +505,21 @@ public class TransService {
         Map<String, String> quartzBasic = getQuartzBasic(kTrans);
 
         return QuartzManager.getTriggerState(quartzBasic.get("triggerName"), quartzBasic.get("triggerGroupName"));
+    }
+
+    /**
+     * 重启后 要启动所有已启动的转换
+     */
+    @PostConstruct
+    public void afterRebootStartTrans()  {
+        KTrans template = new KTrans();
+        template.setTransStatus(1);
+        List<KTrans> kTransList = kTransDao.template(template);
+        if(kTransList!=null && kTransList.size()>0){
+            for(KTrans kTrans:kTransList){
+                start(kTrans.getTransId());
+            }
+        }
+        System.out.println("重启后,要启动所有已启动的作业.已完成此操作");
     }
 }

@@ -31,6 +31,8 @@ import com.zhaxd.web.quartz.QuartzManager;
 import com.zhaxd.web.quartz.model.DBConnectionModel;
 import com.zhaxd.web.utils.CommonUtils;
 
+import javax.annotation.PostConstruct;
+
 @Service
 public class JobService {
 
@@ -509,5 +511,21 @@ public class JobService {
         Map<String, String> quartzBasic = getQuartzBasic(kJob);
 
         return QuartzManager.getTriggerState(quartzBasic.get("triggerName"), quartzBasic.get("triggerGroupName"));
+    }
+
+    /**
+     * 重启后 要启动所有已启动的作业
+     */
+    @PostConstruct
+    public void afterRebootStartJob()  {
+        KJob template=new KJob();
+        template.setJobStatus(1);
+        List<KJob> list=kJobDao.template(template);
+        if(list!=null && list.size()>0){
+            for(KJob kJob:list){
+                start(kJob.getJobId());
+            }
+        }
+        System.out.println("重启后,要启动所有已启动的作业.已完成此操作");
     }
 }
